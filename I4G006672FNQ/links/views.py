@@ -4,7 +4,16 @@ from rest_framework import generics
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, UpdateAPIView, DestroyAPIView
 from .models import Link
 from .serializers import LinkSerializer
-
+from django.utils import timezone
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from . import models 
+from . import serializers
+import datetime 
+from django.contrib.auth.models import User
+from myapp.serializers import UserSerializer
+from rest_framework.permissions import IsAdminUser
 
 # class PostViewSet(viewsets.ModelViewset):
 #     queryset = Link.objects.all()
@@ -56,15 +65,37 @@ class PostDeleteApi(DestroyAPIView):
 #         usernames = [user.username for user in User.objects.all()]
 #         return Response(usernames)
 
-# Create your views here.
-
-
-from django.contrib.auth.models import User
-from myapp.serializers import UserSerializer
-from rest_framework import generics
-from rest_framework.permissions import IsAdminUser
 
 class UserList(generics.ListCreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAdminUser]
+
+
+
+
+class ActiveLinkView(APIView):
+    """
+    Returns a list of all active (publicly accessible) links
+    """
+    def get(self, request):
+        """ 
+        Invoked whenever a HTTP GET Request is made to this view
+        """
+        qs = models.Link.public.all()
+        data = serializers.LinkSerializer(qs, many=True).data
+        return Response(data, status=status.HTTP_200_OK)
+    
+class RecentLinkView(APIView):
+    """
+    Returns a list of recently created active links
+    """
+    def get(self, request):
+        """ 
+        Invoked whenever a HTTP GET Request is made to this view
+        """
+        seven_days_ago = timezone.now() - datetime.timedelta(days=7)
+        qs = models.Link.public.filter(created_date__gte=seven_days_ago)
+        data = serializers.LinkSerializer(qs, many=True).data
+        return Response(data, status=status.HTTP_200_OK)
+    

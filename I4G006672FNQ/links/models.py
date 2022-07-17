@@ -3,6 +3,8 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.urls import reverse
 from django.template.defaultfilters import slugify
+
+from I4G006672FNQ.links.managers import ActiveLinkManager
 # Create your models here.
 class Link(models.Model):
     target_url = models.URLField(max_length=200)
@@ -14,6 +16,8 @@ class Link(models.Model):
     body = models.TextField()
     created_date = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=True)
+    objects = models.Manager()
+    public = ActiveLinkManager()
 
     def __str__(self):
         return self.identifier
